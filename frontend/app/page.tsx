@@ -1,10 +1,16 @@
 export const dynamic = 'force-dynamic';
 
-import HeroDishAnimation from '@/components/home/HeroDishAnimation';
-import BannerCarousel    from '@/components/home/BannerCarousel';
+import dynamic from "next/dynamic";
+
+const HeroDishAnimation = dynamic(
+  () => import('@/components/home/HeroDishAnimation'),
+  { ssr: false }
+);
+
+import BannerCarousel from '@/components/home/BannerCarousel';
 import BestsellersSection from '@/components/home/BestsellersSection';
-import CategoriesSection  from '@/components/home/CategoriesSection';
-import WhyUsSection       from '@/components/home/WhyUsSection';
+import CategoriesSection from '@/components/home/CategoriesSection';
+import WhyUsSection from '@/components/home/WhyUsSection';
 
 export default function HomePage() {
   return (
