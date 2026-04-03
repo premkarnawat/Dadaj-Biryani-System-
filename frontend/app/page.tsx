@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic"; // ✅ renamed
 
-const HeroDishAnimation = dynamic(
+const HeroDishAnimation = nextDynamic(
   () => import('@/components/home/HeroDishAnimation'),
   { ssr: false }
 );
