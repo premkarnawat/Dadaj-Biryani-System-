@@ -27,8 +27,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { data: { session } } = await supabase.auth.getSession();
     set({ user: session?.user ?? null, loading: false, initialized: true });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ user: session?.user ?? null });
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      const user = session?.user ?? null;
+      set({ user });
+
+      // Keep public.users in sync whenever auth state changes
+      if (user) {
+        await supabase.from('users').upsert(
+          {
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name ?? null,
+          },
+          { onConflict: 'id', ignoreDuplicates: false }
+        );
+      }
     });
   },
 }));
