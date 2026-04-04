@@ -18,9 +18,10 @@ interface DishCardProps {
   rating_count: number;
   is_veg: boolean;
   is_bestseller: boolean;
-  prepTime: string;
-  cat: string;
-  onClick?: () => void; // ✅ ADD THIS LINE
+  prepTime?: string;   // ✅ make optional
+  cat?: string;        // ✅ make optional
+  category?: string;   // ✅ support backend field
+  onClick?: () => void;
 }
 
 export default function DishCard({
