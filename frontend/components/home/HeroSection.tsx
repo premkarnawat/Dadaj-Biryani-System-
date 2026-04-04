@@ -1,327 +1,374 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Clock, ArrowRight, Leaf, Flame } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 
+/* ── Dish data ── */
 const DISHES = [
   {
     id: 1,
-    name: 'Chicken Dum Biryani',
-    tagline: 'Slow-cooked in royal dum tradition',
-    price: 299,
-    rating: 4.9,
-    reviews: '1.2k',
-    is_veg: false,
-    badge: 'Bestseller',
-    color: '#FFF3E8',
-    glow: 'rgba(249,115,22,0.22)',
+    name: 'CHICKEN DUM\nBIRYANI',
+    subtitle: 'SLOW-COOKED · ROYAL SPICES',
     image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=700&h=700&fit=crop',
+    price: '₹299',
+    left:  'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&h=300&fit=crop',
+    right: 'https://images.unsplash.com/photo-1645177628172-a94c1f96debb?w=300&h=300&fit=crop',
   },
   {
     id: 2,
-    name: 'Mutton Dum Biryani',
-    tagline: 'Tender mutton, aged basmati',
-    price: 399,
-    rating: 4.8,
-    reviews: '980',
-    is_veg: false,
-    badge: 'Most Loved',
-    color: '#FFF0E5',
-    glow: 'rgba(234,88,12,0.20)',
+    name: 'MUTTON DUM\nBIRYANI',
+    subtitle: 'AGED BASMATI · TENDER MUTTON',
     image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=700&h=700&fit=crop',
+    price: '₹399',
+    left:  'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&h=300&fit=crop',
+    right: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&h=300&fit=crop',
   },
   {
     id: 3,
-    name: 'Hyderabadi Veg Biryani',
-    tagline: 'Saffron-kissed, rich & aromatic',
-    price: 249,
-    rating: 4.7,
-    reviews: '650',
-    is_veg: true,
-    badge: 'Pure Veg',
-    color: '#F0FDF4',
-    glow: 'rgba(34,197,94,0.18)',
+    name: 'HYDERABADI\nVEG BIRYANI',
+    subtitle: 'SAFFRON RICE · PURE VEG',
     image: 'https://images.unsplash.com/photo-1645177628172-a94c1f96debb?w=700&h=700&fit=crop',
-  },
-  {
-    id: 4,
-    name: 'Prawn Biryani',
-    tagline: 'Coastal spices, tiger prawns',
-    price: 449,
-    rating: 4.8,
-    reviews: '530',
-    is_veg: false,
-    badge: 'Chef Special',
-    color: '#FFF8EC',
-    glow: 'rgba(245,158,11,0.22)',
-    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=700&h=700&fit=crop',
+    price: '₹249',
+    left:  'https://images.unsplash.com/photo-1604152135912-04a022e23696?w=300&h=300&fit=crop',
+    right: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&h=300&fit=crop',
   },
 ];
 
-// Preload next image
-function usePreload(dishes: typeof DISHES, current: number) {
-  useEffect(() => {
-    const next = (current + 1) % dishes.length;
-    const img = new window.Image();
-    img.src = dishes[next].image;
-  }, [current, dishes]);
+/* ── Tilt hook ── */
+function useTilt(strength = 8) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rx = useSpring(x, { stiffness: 120, damping: 20 });
+  const ry = useSpring(y, { stiffness: 120, damping: 20 });
+
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width  - 0.5;
+    const py = (e.clientY - rect.top)  / rect.height - 0.5;
+    x.set( py * strength);
+    y.set(-px * strength);
+  };
+  const onLeave = () => { x.set(0); y.set(0); };
+  return { rx, ry, onMove, onLeave };
 }
 
-const DISH_SIZE_DESKTOP = 380;
-const DISH_SIZE_MOBILE  = 240;
-
 export default function HeroSection() {
-  const [index, setIndex]   = useState(0);
-  const [show,  setShow]    = useState(true);
-  const timerRef            = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [idx,  setIdx]  = useState(0);
+  const [show, setShow] = useState(true);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  usePreload(DISHES, index);
-
-  // cycle: show 3.8s → exit 0.55s → next
-  const schedule = () => {
-    timerRef.current = setTimeout(() => setShow(false), 3800);
-  };
-
+  /* cycle every 5 s */
   useEffect(() => {
-    schedule();
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+    timer.current = setTimeout(() => setShow(false), 4200);
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [idx]);
 
-  const onExitComplete = () => {
-    setIndex(i => (i + 1) % DISHES.length);
+  const onExit = () => {
+    setIdx(i => (i + 1) % DISHES.length);
     setShow(true);
   };
 
-  const dish = DISHES[index];
+  const dish = DISHES[idx];
+  const tilt = useTilt(10);
 
-  /* ── variants ── */
-  const imgVariants = {
-    initial: { x: 220, opacity: 0, scale: 0.80 },
-    animate: {
-      x: 0, opacity: 1, scale: 1,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-    },
-    exit: {
-      y: 160, opacity: 0, scale: 0.88,
-      transition: { duration: 0.5, ease: [0.55, 0, 1, 0.45] },
-    },
+  /* variants */
+  const centerV = {
+    initial: { scale: 0.72, opacity: 0, y: 60 },
+    animate: { scale: 1,    opacity: 1, y: 0,  transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] } },
+    exit:    { scale: 0.85, opacity: 0, y: 80, transition: { duration: 0.5,  ease: [0.55, 0, 1, 0.45] } },
   };
-
-  const infoVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { delay: 0.28, duration: 0.45, ease: 'easeOut' } },
-    exit:    { opacity: 0, y: -12, transition: { duration: 0.25 } },
+  const sideV = {
+    initial: { scale: 0.8, opacity: 0 },
+    animate: { scale: 1,   opacity: 1, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.1 } },
+    exit:    { scale: 0.8, opacity: 0, transition: { duration: 0.35 } },
+  };
+  const textV = {
+    initial: { opacity: 0, y: 18 },
+    animate: { opacity: 1, y: 0,  transition: { delay: 0.3, duration: 0.5  } },
+    exit:    { opacity: 0, y: -10, transition: { duration: 0.25 } },
   };
 
   return (
     <section
-      className="relative w-full overflow-hidden pt-16"
-      style={{ minHeight: '82vh', background: `linear-gradient(135deg, ${dish.color} 0%, #fffbf5 60%, #fff 100%)` }}
+      className="relative w-full overflow-hidden select-none"
+      style={{ minHeight: '100vh', paddingTop: '4rem' }}
     >
-      {/* Background glow blob — follows dish color */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`blob-${dish.id}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="absolute top-0 right-0 w-[60vw] h-[80vh] pointer-events-none -z-0"
-          style={{ background: `radial-gradient(ellipse at 70% 40%, ${dish.glow} 0%, transparent 70%)` }}
+      {/* ══ RICH RED BACKGROUND ══ */}
+      <div className="absolute inset-0 z-0" style={{ background: '#8B1A1A' }}>
+        {/* Subtle radial light center */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 30%, #B22222 0%, #7B0E0E 55%, #5C0A0A 100%)' }}
         />
-      </AnimatePresence>
+        {/* Swirl pattern overlay — SVG */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="swirl" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+              <path
+                d="M60 10 C80 10, 110 30, 110 60 C110 90, 80 110, 60 110 C40 110, 10 90, 10 60 C10 30, 40 10, 60 10 Z
+                   M60 25 C72 25, 95 42, 95 60 C95 78, 72 95, 60 95 C48 95, 25 78, 25 60 C25 42, 48 25, 60 25 Z"
+                stroke="#fff" strokeWidth="1.5" fill="none"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#swirl)" />
+        </svg>
+        {/* Vignette */}
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%)' }} />
+      </div>
 
-      {/* ── CONTENT GRID ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 h-full flex items-center"
-           style={{ minHeight: 'calc(82vh - 4rem)' }}>
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center py-10 lg:py-0">
+      {/* ══ WOODEN ARC BOARD ══ */}
+      <div className="absolute z-10 pointer-events-none" style={{ top: '-8%', left: '50%', transform: 'translateX(-50%)', width: '110%', maxWidth: 1100 }}>
+        <svg viewBox="0 0 1100 520" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+          <defs>
+            <radialGradient id="woodGrad" cx="50%" cy="20%" r="70%">
+              <stop offset="0%"   stopColor="#C68B47" />
+              <stop offset="40%"  stopColor="#A0662A" />
+              <stop offset="100%" stopColor="#7A4A18" />
+            </radialGradient>
+            {/* Wood grain lines */}
+            <pattern id="grain" x="0" y="0" width="8" height="300" patternUnits="userSpaceOnUse">
+              <line x1="4" y1="0" x2="4" y2="300" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+            </pattern>
+          </defs>
+          {/* Outer arc */}
+          <path
+            d="M 50 480 C 50 180, 280 20, 550 20 C 820 20, 1050 180, 1050 480"
+            fill="url(#woodGrad)"
+            stroke="#8B5A20"
+            strokeWidth="2"
+          />
+          {/* Wood grain overlay */}
+          <path
+            d="M 50 480 C 50 180, 280 20, 550 20 C 820 20, 1050 180, 1050 480"
+            fill="url(#grain)"
+          />
+          {/* Inner arc cutout (hollow ring) */}
+          <path
+            d="M 160 480 C 160 230, 330 90, 550 90 C 770 90, 940 230, 940 480"
+            fill="#8B1A1A"
+          />
+          {/* Subtle inner shadow */}
+          <path
+            d="M 155 480 C 155 226, 328 85, 550 85 C 772 85, 945 226, 945 480"
+            fill="none"
+            stroke="rgba(0,0,0,0.35)"
+            strokeWidth="8"
+          />
+        </svg>
+      </div>
 
-          {/* ══ LEFT — Text ══ */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 space-y-5">
+      {/* ══ FLOATING MICRO ELEMENTS ══ */}
+      {/* Left: Boiled egg */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [-3, 3, -3] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute z-20 pointer-events-none"
+        style={{ left: '4%', top: '42%', width: 90 }}
+      >
+        <Image
+          src="https://images.unsplash.com/photo-1607532941433-304659e8198a?w=180&h=180&fit=crop"
+          alt="egg" width={90} height={90}
+          className="rounded-full shadow-2xl object-cover"
+          style={{ border: '3px solid rgba(255,255,255,0.15)' }}
+        />
+      </motion.div>
+      {/* Left: Chili */}
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [10, -5, 10] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+        className="absolute z-20 pointer-events-none"
+        style={{ left: '7%', top: '62%' }}
+      >
+        <div className="text-5xl drop-shadow-lg">🌶️</div>
+      </motion.div>
+      {/* Left: Spoon */}
+      <motion.div
+        animate={{ rotate: [-25, -20, -25], y: [0, -5, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        className="absolute z-20 pointer-events-none"
+        style={{ left: '1%', top: '72%' }}
+      >
+        <div className="text-5xl drop-shadow-lg" style={{ transform: 'rotate(-25deg)' }}>🥄</div>
+        <div className="text-4xl drop-shadow-lg mt-1" style={{ transform: 'rotate(-20deg)', marginLeft: 8 }}>🥄</div>
+      </motion.div>
 
-            {/* Live badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-sm font-semibold"
-            >
-              <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              Open Now · Delivering in 30 mins
-            </motion.div>
+      {/* Right: Spices */}
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [5, -5, 5] }}
+        transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+        className="absolute z-20 pointer-events-none"
+        style={{ right: '5%', top: '44%' }}
+      >
+        <div className="text-5xl drop-shadow-lg">🫙</div>
+      </motion.div>
+      {/* Right: Mint */}
+      <motion.div
+        animate={{ y: [0, 8, 0], x: [0, 4, 0] }}
+        transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+        className="absolute z-20 pointer-events-none"
+        style={{ right: '3%', top: '62%' }}
+      >
+        <div className="text-5xl drop-shadow-lg">🫚</div>
+      </motion.div>
+      {/* Right: Handi */}
+      <motion.div
+        animate={{ rotate: [8, 14, 8], y: [0, -5, 0] }}
+        transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+        className="absolute z-20 pointer-events-none"
+        style={{ right: '1%', top: '74%' }}
+      >
+        <div className="text-5xl drop-shadow-lg" style={{ transform: 'rotate(8deg)' }}>🫕</div>
+        <div className="text-4xl drop-shadow-lg" style={{ transform: 'rotate(12deg)', marginLeft: 12 }}>🌿</div>
+      </motion.div>
 
-            {/* Heading */}
+      {/* ══ MAIN CONTENT ══ */}
+      <div className="relative z-30 flex flex-col items-center" style={{ minHeight: '100vh', paddingTop: '2rem' }}>
+
+        {/* ── subtitle above heading ── */}
+        <motion.div
+          initial={{ opacity: 0, letterSpacing: '0.3em' }}
+          animate={{ opacity: 1, letterSpacing: '0.5em' }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className="flex items-center gap-3 mb-3 mt-6"
+        >
+          <div className="h-px w-10 bg-amber-300/70" />
+          <span className="text-amber-300 text-xs font-semibold tracking-[0.45em] uppercase">Authentic Indian</span>
+          <div className="h-px w-10 bg-amber-300/70" />
+        </motion.div>
+
+        {/* ── BIG HEADING ── */}
+        <AnimatePresence mode="wait">
+          {show && (
             <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.08 }}
-              className="font-display font-bold text-gray-900 leading-[1.08]"
-              style={{ fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)' }}
-            >
-              Taste the<br />
-              <span className="gradient-text">Royal Biryani</span><br />
-              <span style={{ fontSize: '0.72em', color: '#6b7280', fontWeight: 600 }}>
-                Experience
-              </span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.22 }}
-              className="text-gray-400 text-base sm:text-lg max-w-md leading-relaxed"
-            >
-              Authentic Dum-pukht tradition crafted with the finest Basmati
-              and hand-picked spices — delivered fresh to your door.
-            </motion.p>
-
-            {/* Animated dish info (sync with right side) */}
-            <AnimatePresence mode="wait">
-              {show && (
-                <motion.div
-                  key={`badge-${dish.id}`}
-                  variants={infoVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-orange-100 rounded-2xl px-4 py-3 shadow-sm w-fit"
-                >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${dish.is_veg ? 'bg-green-50' : 'bg-red-50'}`}>
-                    {dish.is_veg
-                      ? <Leaf  className="w-4 h-4 text-green-600" />
-                      : <Flame className="w-4 h-4 text-red-500" />}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm leading-tight">{dish.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      <span className="text-xs text-gray-500">{dish.rating} · {dish.reviews} reviews</span>
-                      <span className="text-xs font-bold text-primary-600 ml-1">₹{dish.price}</span>
-                    </div>
-                  </div>
-                  <span className="ml-auto text-xs bg-primary-100 text-primary-700 font-bold px-2 py-0.5 rounded-full">
-                    {dish.badge}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="flex items-center gap-6"
-            >
-              {[
-                { v: '4.8★', l: 'Rating' },
-                { v: '10K+', l: 'Orders' },
-                { v: '30m',  l: 'Delivery', icon: <Clock className="w-3.5 h-3.5 text-primary-400 inline mr-0.5" /> },
-              ].map((s, i) => (
-                <div key={i} className="text-center lg:text-left">
-                  <p className="font-bold text-xl text-gray-900">{s.icon}{s.v}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{s.l}</p>
-                </div>
-              ))}
-            </motion.div>
-
-            {/* CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.42 }}
-              className="flex flex-wrap gap-3 justify-center lg:justify-start"
-            >
-              <Link href="/dishes">
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-orange flex items-center gap-2 text-[15px]"
-                >
-                  Order Now <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </Link>
-              <Link href="/dishes">
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-white text-gray-700 px-8 py-3.5 rounded-2xl font-semibold border border-orange-200 hover:border-primary-400 transition-all text-[15px]"
-                >
-                  View Menu
-                </motion.button>
-              </Link>
-            </motion.div>
-
-            {/* Dot indicators */}
-            <div className="flex gap-2 pt-2">
-              {DISHES.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setShow(false); setTimeout(() => { setIndex(i); setShow(true); }, 120); }}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i === index ? 'w-7 bg-primary-500' : 'w-2 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* ══ RIGHT — Dish image ══ */}
-          <div
-            className="relative flex items-center justify-center order-1 lg:order-2"
-            style={{ minHeight: DISH_SIZE_MOBILE + 60 }}
-          >
-            {/* Decorative ring behind dish */}
-            <div
-              className="absolute rounded-full border-2 border-dashed border-orange-200/50"
-              style={{ width: DISH_SIZE_DESKTOP + 80, height: DISH_SIZE_DESKTOP + 80, maxWidth: '90vw', maxHeight: '90vw' }}
-            />
-            <div
-              className="absolute rounded-full"
+              key={`title-${dish.id}`}
+              variants={textV}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="text-center font-black uppercase leading-none tracking-tight"
               style={{
-                width: DISH_SIZE_DESKTOP + 40,
-                height: DISH_SIZE_DESKTOP + 40,
-                maxWidth: '85vw',
-                maxHeight: '85vw',
-                background: `radial-gradient(circle, ${dish.glow} 0%, transparent 70%)`,
+                fontSize: 'clamp(3.2rem, 9vw, 7.5rem)',
+                color: '#F5E6D0',
+                fontFamily: '"Impact", "Arial Black", sans-serif',
+                textShadow: '0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.1)',
+                letterSpacing: '-0.01em',
+                whiteSpace: 'pre-line',
               }}
-            />
+            >
+              {dish.name}
+            </motion.h1>
+          )}
+        </AnimatePresence>
 
-            {/* THE DISH */}
-            <AnimatePresence mode="wait" onExitComplete={onExitComplete}>
+        {/* ── THREE BOWLS LAYOUT ── */}
+        <div
+          className="relative w-full flex items-end justify-center"
+          style={{ marginTop: '-1rem', minHeight: 420 }}
+        >
+          {/* LEFT small bowl */}
+          <AnimatePresence mode="wait">
+            {show && (
+              <motion.div
+                key={`left-${dish.id}`}
+                variants={sideV}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="absolute z-20"
+                style={{ left: '8%', top: 20 }}
+              >
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  whileHover={{ scale: 1.08, rotate: -4 }}
+                  className="relative cursor-pointer"
+                  style={{ width: 'clamp(100px,14vw,170px)', height: 'clamp(100px,14vw,170px)' }}
+                >
+                  <Image
+                    src={dish.left}
+                    alt="side dish"
+                    fill
+                    className="object-cover rounded-full"
+                    style={{
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.55)',
+                      border: '4px solid rgba(255,255,255,0.12)',
+                    }}
+                  />
+                  {/* Dark bowl rim overlay */}
+                  <div className="absolute inset-0 rounded-full ring-4 ring-black/30 pointer-events-none" />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* RIGHT small bowl */}
+          <AnimatePresence mode="wait">
+            {show && (
+              <motion.div
+                key={`right-${dish.id}`}
+                variants={sideV}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="absolute z-20"
+                style={{ right: '8%', top: 20 }}
+              >
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                  whileHover={{ scale: 1.08, rotate: 4 }}
+                  className="relative cursor-pointer"
+                  style={{ width: 'clamp(100px,14vw,170px)', height: 'clamp(100px,14vw,170px)' }}
+                >
+                  <Image
+                    src={dish.right}
+                    alt="side dish"
+                    fill
+                    className="object-cover rounded-full"
+                    style={{
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.55)',
+                      border: '4px solid rgba(255,255,255,0.12)',
+                    }}
+                  />
+                  <div className="absolute inset-0 rounded-full ring-4 ring-black/30 pointer-events-none" />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* CENTER big bowl */}
+          <div
+            className="relative z-30 mx-auto"
+            onMouseMove={tilt.onMove}
+            onMouseLeave={tilt.onLeave}
+            style={{ width: 'clamp(240px,38vw,420px)', height: 'clamp(240px,38vw,420px)' }}
+          >
+            <AnimatePresence mode="wait" onExitComplete={onExit}>
               {show && (
                 <motion.div
                   key={dish.id}
-                  variants={imgVariants}
+                  variants={centerV}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  className="relative z-10"
-                  style={{
-                    width:  `clamp(${DISH_SIZE_MOBILE}px, 36vw, ${DISH_SIZE_DESKTOP}px)`,
-                    height: `clamp(${DISH_SIZE_MOBILE}px, 36vw, ${DISH_SIZE_DESKTOP}px)`,
-                  }}
+                  style={{ rotateX: tilt.rx, rotateY: tilt.ry, transformPerspective: 800 }}
+                  className="w-full h-full"
                 >
-                  {/* Floating animation wrapper */}
+                  {/* Floating animation */}
                   <motion.div
-                    animate={{ y: [0, -14, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-                    className="w-full h-full"
+                    animate={{ y: [0, -16, 0] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+                    className="w-full h-full relative"
                   >
-                    {/* Glow shadow under dish */}
+                    {/* Glow under bowl */}
                     <div
-                      className="absolute -bottom-6 left-1/2 -translate-x-1/2 rounded-full blur-2xl"
-                      style={{
-                        width: '75%', height: 40,
-                        background: dish.glow.replace('0.22', '0.45').replace('0.20', '0.40').replace('0.18', '0.35'),
-                      }}
+                      className="absolute -bottom-6 left-1/2 -translate-x-1/2 rounded-full blur-3xl"
+                      style={{ width: '80%', height: 50, background: 'rgba(200,80,0,0.5)' }}
                     />
-
                     <Image
                       src={dish.image}
                       alt={dish.name}
@@ -329,50 +376,78 @@ export default function HeroSection() {
                       priority
                       className="object-cover rounded-full"
                       style={{
-                        boxShadow: `0 32px 80px ${dish.glow.replace('0.22','0.35')}, 0 8px 32px rgba(0,0,0,0.10)`,
+                        boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 8px 32px rgba(0,0,0,0.4)',
+                        border: '5px solid rgba(255,255,255,0.10)',
                       }}
-                      sizes={`(max-width: 768px) ${DISH_SIZE_MOBILE}px, ${DISH_SIZE_DESKTOP}px`}
+                      sizes="(max-width:768px) 240px, 420px"
                     />
-
-                    {/* White ring */}
-                    <div className="absolute inset-0 rounded-full ring-8 ring-white/70 pointer-events-none" />
-
-                    {/* Price badge floating on image */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.5, type: 'spring', damping: 14 }}
-                      className="absolute bottom-6 right-0 bg-white rounded-2xl shadow-lg px-4 py-2.5 border border-orange-100"
-                    >
-                      <p className="text-xs text-gray-400 leading-none mb-0.5">{dish.badge}</p>
-                      <p className="font-bold text-primary-600 text-lg leading-none">₹{dish.price}</p>
-                    </motion.div>
-
-                    {/* Rating badge */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.6, type: 'spring', damping: 14 }}
-                      className="absolute top-4 -left-2 bg-white rounded-2xl shadow-lg px-3 py-2 border border-orange-100 flex items-center gap-1.5"
-                    >
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span className="font-bold text-sm text-gray-800">{dish.rating}</span>
-                      <span className="text-xs text-gray-400">/ 5</span>
-                    </motion.div>
+                    {/* Rim shadow */}
+                    <div className="absolute inset-0 rounded-full ring-8 ring-black/20 pointer-events-none" />
                   </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-
         </div>
-      </div>
 
-      {/* Bottom wave */}
-      <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none">
-        <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          <path d="M0 48C240 16 480 0 720 0C960 0 1200 16 1440 48H0Z" fill="white" fillOpacity="0.6"/>
-        </svg>
+        {/* ── Bottom info + CTA ── */}
+        <AnimatePresence mode="wait">
+          {show && (
+            <motion.div
+              key={`cta-${dish.id}`}
+              variants={textV}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="flex flex-col items-center gap-4 mt-2 pb-10"
+            >
+              {/* Dish subtitle + price */}
+              <div className="text-center">
+                <div className="flex items-center gap-3 justify-center mb-1">
+                  <div className="h-px w-8 bg-amber-400/50" />
+                  <p className="text-amber-300 text-xs font-semibold tracking-[0.35em]">{dish.subtitle}</p>
+                  <div className="h-px w-8 bg-amber-400/50" />
+                </div>
+                <p className="text-white/60 text-sm tracking-widest font-medium">{dish.price}</p>
+              </div>
+
+              {/* CTA */}
+              <Link href="/dishes">
+                <motion.button
+                  whileHover={{ scale: 1.06, boxShadow: '0 0 32px rgba(245,158,11,0.5)' }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2.5 font-bold text-sm tracking-[0.2em] uppercase px-10 py-4 rounded-full border-2 transition-all"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    borderColor: 'rgba(245,158,11,0.7)',
+                    color: '#F5E6D0',
+                    backdropFilter: 'blur(12px)',
+                    letterSpacing: '0.2em',
+                  }}
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  ORDER NOW
+                </motion.button>
+              </Link>
+
+              {/* Dot indicators */}
+              <div className="flex gap-2 mt-1">
+                {DISHES.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setShow(false); setTimeout(() => { setIdx(i); setShow(true); }, 100); }}
+                    className={`rounded-full transition-all duration-300 ${
+                      i === idx
+                        ? 'w-6 h-2 bg-amber-400'
+                        : 'w-2 h-2 bg-white/30 hover:bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </section>
   );
