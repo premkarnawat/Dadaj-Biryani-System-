@@ -1,25 +1,19 @@
 export const dynamic = 'force-dynamic';
 
-import nextDynamic from "next/dynamic"; // ✅ renamed
-
-const HeroDishAnimation = nextDynamic(
-  () => import('@/components/home/HeroDishAnimation'),
-  { ssr: false }
-);
-
-import BannerCarousel from '@/components/home/BannerCarousel';
-import BestsellersSection from '@/components/home/BestsellersSection';
-import CategoriesSection from '@/components/home/CategoriesSection';
-import WhyUsSection from '@/components/home/WhyUsSection';
+import HeroSection        from '@/components/home/HeroSection';
+import BannerCarousel     from '@/components/home/BannerCarousel';
+import CategoriesSection  from '@/components/home/CategoriesSection';
+import MenuSection        from '@/components/home/MenuSection';
+import WhyUsSection       from '@/components/home/WhyUsSection';
 
 export default function HomePage() {
   return (
     <div>
-      <HeroDishAnimation />
-      <div className="max-w-7xl mx-auto px-4 space-y-12 py-12">
+      <HeroSection />
+      <div className="max-w-7xl mx-auto px-4 space-y-4 py-10">
         <BannerCarousel />
         <CategoriesSection />
-        <BestsellersSection />
+        <MenuSection />
         <WhyUsSection />
       </div>
     </div>
