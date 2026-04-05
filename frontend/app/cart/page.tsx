@@ -39,17 +39,38 @@ export default function CartPage() {
   const [upiId,      setUpiId]      = useState('');
 
   /* ── Coupon ── */
-  const handleCoupon = () => {
-    setCouponErr('');
-    const c = COUPONS[code.toUpperCase()];
-    if (!c) { setCouponErr('Invalid coupon code'); return; }
-    if (subtotal() < c.min) { setCouponErr(`Min order ₹${c.min} required`); return; }
-    let amt = c.type === 'pct' ? subtotal() * c.val / 100 : c.val;
-    if (c.max) amt = Math.min(amt, c.max);
-    applyCoupon({ code: code.toUpperCase(), discountType: c.type, discountValue: c.val, discountAmount: Math.round(amt) });
-    toast.success(`Coupon applied! You saved ${formatPrice(Math.round(amt))}`);
-    setCode('');
-  };
+const handleCoupon = () => {
+  setCouponErr('');
+  const c = COUPONS[code.toUpperCase()];
+
+  if (!c) {
+    setCouponErr('Invalid coupon code');
+    return;
+  }
+
+  if (subtotal() < c.min) {
+    setCouponErr(`Min order ₹${c.min} required`);
+    return;
+  }
+
+  const isPercentage = c.type === 'pct';
+
+  let amt = isPercentage
+    ? subtotal() * c.val / 100
+    : c.val;
+
+  if (c.max) amt = Math.min(amt, c.max);
+
+  applyCoupon({
+    code: code.toUpperCase(),
+    discountType: isPercentage ? 'percentage' : 'fixed', // ✅ FIXED HERE
+    discountValue: c.val,
+    discountAmount: Math.round(amt),
+  });
+
+  toast.success(`Coupon applied! You saved ${formatPrice(Math.round(amt))}`);
+  setCode('');
+};
 
   /* ── Payment ── */
   const handlePay = async () => {
