@@ -32,6 +32,7 @@ const LINKS = [
   { href:'/admin/dishes',  label:'Manage Dishes',  icon:UtensilsCrossed },
   { href:'/admin/coupons', label:'Coupons',         icon:Tag },
   { href:'/admin/chat',    label:'Support Chat',    icon:MessageCircle },
+  { href:'/admin/users',   label:'Manage Users',    icon:Users },
   { href:'/delivery',      label:'Delivery Boys',   icon:Bike },
 ];
 
