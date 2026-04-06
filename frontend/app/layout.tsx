@@ -1,22 +1,17 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
-import BottomNav from '@/components/layout/BottomNav';
-import TopNav    from '@/components/layout/TopNav';
+import BottomNav   from '@/components/layout/BottomNav';
+import TopNav      from '@/components/layout/TopNav';
+import SplashScreen from '@/components/SplashScreen';
 
 export const metadata: Metadata = {
   title: 'DADAJ BIRYANI – Premium Biryani Delivery',
   description: 'Order the finest biryanis crafted with royal Dum-pukht tradition. Authentic flavors delivered fresh to your door in Satara.',
-  keywords: 'biryani, dadaj biryani, premium biryani, order biryani online, Satara biryani, hyderabadi biryani',
+  keywords: 'biryani, dadaj biryani, premium biryani, order biryani, Satara',
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'DADAJ BIRYANI' },
-  openGraph: {
-    title: 'DADAJ BIRYANI',
-    description: 'Premium Biryani Experience – Order Now',
-    type: 'website',
-    locale: 'en_IN',
-  },
-  twitter: { card: 'summary_large_image', title: 'DADAJ BIRYANI', description: 'Premium Biryani Delivery' },
+  openGraph: { title: 'DADAJ BIRYANI', description: 'Premium Biryani Delivery', type: 'website', locale: 'en_IN' },
 };
 
 export const viewport: Viewport = {
@@ -37,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-brand-cream font-body antialiased">
+        <SplashScreen />
         <TopNav />
         <main className="min-h-screen pb-20 md:pb-0">{children}</main>
         <BottomNav />
