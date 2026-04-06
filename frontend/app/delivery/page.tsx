@@ -167,11 +167,13 @@ export default function DeliveryPage() {
                 </div>
 
                 {/* COD collect notice */}
-                {o.payment==='COD' && o.paymentStatus==='PENDING' && o.status!=='DELIVERED' && (
-                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700 font-medium flex items-center gap-1.5">
-                    <Banknote className="w-3.5 h-3.5"/>
-                    Collect ₹{o.total} in cash on delivery
-                  </div>
+                {{o.payment === 'COD' ? (
+                  <>
+                    <Banknote className="w-4 h-4 text-amber-600" />
+                    <span className="text-xs font-bold text-amber-700">COD</span>
+                  </>
+                ) : (
+                  <CreditCard className="w-4 h-4 text-green-600" />
                 )}
 
                 {o.status!=='DELIVERED' && (
