@@ -1,0 +1,16 @@
+{
+  "name": "DADAJ BIRYANI",
+  "short_name": "Dadaj",
+  "description": "Premium Biryani Delivery – Royal taste, delivered fresh",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffbf5",
+  "theme_color": "#f97316",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+  ],
+  "categories": ["food", "shopping"],
+  "lang": "en-IN"
+}
