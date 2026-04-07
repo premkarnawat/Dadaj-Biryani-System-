@@ -1,12 +1,16 @@
-const router = require('express').Router();
+/**
+ * CATEGORIES ROUTES
+ * Frontend calls: categoriesApi.getAll()
+ * Expected: { categories: [{ id, name, slug, image_url, sort_order }] }
+ */
+const router   = require('express').Router();
 const supabase = require('../lib/supabase');
 
-// GET /categories
 router.get('/', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('categories')
-      .select('*')
+      .select('id, name, slug, image_url, sort_order')
       .order('sort_order', { ascending: true });
 
     if (error) throw error;
