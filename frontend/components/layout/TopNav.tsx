@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,7 +45,12 @@ export default function TopNav() {
           <Link href="/" className="flex flex-col items-start leading-none flex-shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-orange flex-shrink-0">
-                <span className="text-white font-display font-bold text-base"><Image src="https://itljbfvpsrpjvtfzlqfx.supabase.co/storage/v1/object/public/logos/dadaj%20logo%20.jpeg"/></span>
+                <Image
+                  src="https://xxxx.supabase.co/storage/v1/object/public/logos/dadaj-logo.png"
+                  alt="DADAJ BIRYANI"
+                  width={40} height={40}
+                  className="object-contain"
+                />
               </div>
               <span className={`font-display font-bold text-xl leading-none transition-colors ${onHero ? 'text-amber-100' : 'text-primary-600'}`}>
                 DADAJ
