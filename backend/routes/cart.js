@@ -1,21 +1,18 @@
-const router = require('express').Router();
-// Cart is managed client-side via Zustand + localStorage
-// This route can be used for server-side cart sync
-
-const { auth } = require('../middleware/auth');
+/**
+ * CART SYNC ROUTE (optional — cart is client-side in Zustand)
+ * Validates product prices server-side to prevent tampering
+ */
+const router   = require('express').Router();
 const supabase = require('../lib/supabase');
+const { auth } = require('../middleware/auth');
 
-// POST /cart/sync - sync client cart to server (optional)
+// POST /cart/sync { items: CartItem[] }
 router.post('/sync', auth, async (req, res) => {
   try {
     const { items } = req.body;
-    // Could store in a cart table; for now just validate items
-    if (!Array.isArray(items)) {
-      return res.status(400).json({ error: 'Items must be an array' });
-    }
+    if (!Array.isArray(items)) return res.status(400).json({ error: 'items must be array' });
 
-    // Validate products exist
-    const ids = items.map((i) => i.id);
+    const ids = items.map(i => i.id);
     const { data: products, error } = await supabase
       .from('products')
       .select('id, name, price, is_available')
@@ -23,12 +20,17 @@ router.post('/sync', auth, async (req, res) => {
 
     if (error) throw error;
 
-    const validatedItems = items.map((item) => {
-      const product = products.find((p) => p.id === item.id);
-      return { ...item, valid: !!product && product.is_available, currentPrice: product?.price };
+    const validated = items.map(item => {
+      const p = products.find(pr => pr.id === item.id);
+      return {
+        ...item,
+        valid:        !!p && p.is_available,
+        serverPrice:  p?.price,
+        priceMismatch: p && Math.abs(p.price - item.price) > 50, // allow add-on variance
+      };
     });
 
-    res.json({ items: validatedItems });
+    res.json({ items: validated });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
