@@ -1,4 +1,10 @@
-const router = require('express').Router();
+/**
+ * CHAT ROUTES
+ * Frontend calls: chatApi.getMessages(), chatApi.sendMessage(message)
+ * Supabase table: chat_messages { id, user_id, message, is_admin, created_at }
+ * Frontend subscribes directly via Supabase Realtime — no extra socket needed
+ */
+const router   = require('express').Router();
 const supabase = require('../lib/supabase');
 const { auth } = require('../middleware/auth');
 
@@ -7,7 +13,7 @@ router.get('/messages', auth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('chat_messages')
-      .select('*')
+      .select('id, message, is_admin, created_at')
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: true })
       .limit(100);
@@ -19,11 +25,11 @@ router.get('/messages', auth, async (req, res) => {
   }
 });
 
-// POST /chat/send
+// POST /chat/send  { message }
 router.post('/send', auth, async (req, res) => {
   try {
     const { message } = req.body;
-    if (!message?.trim()) return res.status(400).json({ error: 'Message is required' });
+    if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
 
     const { data, error } = await supabase
       .from('chat_messages')
@@ -33,7 +39,7 @@ router.post('/send', auth, async (req, res) => {
 
     if (error) throw error;
 
-    // Emit to admin room
+    // Notify admin room via socket
     req.app.get('io')?.to('admin-room').emit('new-chat-message', {
       ...data, user_email: req.user.email,
     });
